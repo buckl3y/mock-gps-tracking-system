@@ -4,7 +4,8 @@ Solo project meant to demonstrate use of containers and microservices.
 
 gps_producer
 	Produces simulated GPS messages in JSON format 
-	{"serial_number" : String	
+	{"serial_number" : String
+	 "time" : Timestamp
 	 "longitude" : float64 
 	 "latitude" : float64}
 	 
