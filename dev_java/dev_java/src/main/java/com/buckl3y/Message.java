@@ -26,5 +26,21 @@ public class Message {
         + "\nLatitude: " + this.latitude + ","
         + "\nLongitude: " + this.longitude + "\n}";
     }
+
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public ZonedDateTime getTime() {
+        return time;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
 }
 
