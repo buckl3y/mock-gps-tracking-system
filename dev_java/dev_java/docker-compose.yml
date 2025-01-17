@@ -1,0 +1,28 @@
+services:
+  producer:
+    build: .
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    networks:
+      - default
+
+  # database
+  postgres:
+    image: postgres:latest
+    env_file:
+      - .env
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - ./initdb.d:/docker-entrypoint-initdb.d
+    networks:
+      - default
+
+# Development Network
+networks:
+  default:
+    driver: bridge
