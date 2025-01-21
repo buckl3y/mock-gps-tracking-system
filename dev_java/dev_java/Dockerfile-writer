@@ -1,0 +1,28 @@
+# Build Stage
+FROM maven:3.8.7-eclipse-temurin-17 as builder
+
+WORKDIR /build
+
+# Copy the parent POM and module directories
+COPY pom.xml ./
+COPY producer ./producer  
+COPY writer ./writer
+COPY common ./common
+COPY dev ./dev
+
+# Build the writer module (and its dependencies)
+RUN mvn clean package -pl writer -am -DskipTests
+
+# Optional: List contents of target directory for debugging
+RUN ls -l /build/writer/target
+
+# Runtime Stage
+FROM eclipse-temurin:17-jre
+
+WORKDIR /app
+
+# Copy the built JAR from the builder stage
+COPY --from=builder /build/writer/target/writer*.jar ./writer.jar
+
+# Run the application
+CMD ["java", "-jar", "writer.jar"]
