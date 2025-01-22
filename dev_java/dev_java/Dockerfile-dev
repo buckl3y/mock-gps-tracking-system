@@ -13,9 +13,6 @@ COPY dev ./dev
 # Build the dev module (and its dependencies)
 RUN mvn clean package -pl dev -am -DskipTests
 
-# Optional: List contents of target directory for debugging
-RUN ls -l /build/dev/target
-
 # Runtime Stage
 FROM eclipse-temurin:17-jre
 

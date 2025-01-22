@@ -13,16 +13,13 @@ COPY dev ./dev
 # Build the producer module (and its dependencies)
 RUN mvn clean package -pl producer -am -DskipTests
 
-# Optional: List contents of target directory for debugging
-RUN ls -l /build/producer/target
-
 # Runtime Stage
 FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
 # Copy the built JAR from the builder stage
-COPY --from=builder /build/producer/target/producer*.jar ./producer.jar
+COPY --from=builder /build/producer/target/producer*-with-dependencies.jar ./producer.jar
 
 # Run the application
 CMD ["java", "-jar", "producer.jar"]

@@ -9,6 +9,7 @@ services:
       - .env
     depends_on:
       - postgres
+      - rabbitmq
     networks:
       - default
 
@@ -21,7 +22,7 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
+      - producer
     networks:
       - default
 
@@ -34,9 +35,23 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
+      - producer
     networks:
       - default
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    depends_on:
+      - postgres
+    networks:
+      - default  
 
   # database
   postgres:

@@ -40,7 +40,6 @@ public class GPSProducer {
             randLatitude = (double) Math.round(randLatitude * 10000000) / 10000000;
             messages.add(new Message(sn, time, randLatitude, randLongitude));
         }
-        System.out.println(messages);
     }
 
     public void sendMessages() {
@@ -58,6 +57,9 @@ public class GPSProducer {
                     System.out.println("Error!");
                 }
             }
+            System.out.println("Messages sent!");
+        } else {
+            System.out.println("No messages in list! please generate some messages.");
         }
     }
 }
