@@ -1,5 +1,6 @@
 package com.buckl3y;
 
+import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,9 +9,14 @@ import java.util.Random;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Channel;
+
 public class GPSProducer {
     List<Message> messages = new ArrayList<>();
-    String library = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private final String library = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private final String queueName = "gps_messages"; // $RABBITMQ_QUEUE_NAME
     Random rand = new Random();
 
     public List<String> generateSerialNumbers(int snCount) {
@@ -60,6 +66,33 @@ public class GPSProducer {
             System.out.println("Messages sent!");
         } else {
             System.out.println("No messages in list! please generate some messages.");
+        }
+    }
+
+    public void connectRabbitMQ() {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost"); // $RABBITMQ_HOST
+        factory.setPort(5672);
+        Connection conn = null;
+        Channel chnl = null;
+        while (conn == null) {
+            try {
+                conn = factory.newConnection();
+                chnl = conn.createChannel();
+                Thread.sleep(3000);
+            } catch (Exception e) {
+                System.out.println("Unable to create connection to rabbitmq");
+            }
+        }
+        try {
+            chnl.queueDeclare(
+                    queueName,
+                    false,
+                    false,
+                    false,
+                    null);
+        } catch (IOException e) {
+            System.out.println("IO Exception");
         }
     }
 }
