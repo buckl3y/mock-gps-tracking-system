@@ -5,6 +5,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeoutException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,7 +17,13 @@ import com.rabbitmq.client.Channel;
 public class GPSProducer {
     List<Message> messages = new ArrayList<>();
     private final String library = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private final String queueName = "gps_messages"; // $RABBITMQ_QUEUE_NAME
+    private final String rabbitmqQueue = System.getenv("RABBITMQ_QUEUE_NAME");
+    private final String rabbitmqUser = System.getenv("RABBITMQ_DEFAULT_USER");
+    private final String rabbitmqPass = System.getenv("RABBITMQ_DEFAULT_PASS");
+    private final String rabbitmqHost = System.getenv("RABBITMQ_HOST");
+    private final String rabbitmqPort = System.getenv("RABBITMQ_PORT");
+    private Connection conn;
+    private Channel chnl;
     Random rand = new Random();
 
     public List<String> generateSerialNumbers(int snCount) {
@@ -50,20 +57,25 @@ public class GPSProducer {
 
     public void sendMessages() {
         // send JSON messages to RabbitMQ
-        if (!messages.isEmpty()) {
-            for (Message message : messages) {
-                JSONObject json = new JSONObject();
-                try {
-                    json.put("serialNumber", message.getSerialNumber());
-                    json.put("time", message.getTime());
-                    json.put("latitude", message.getLatitude());
-                    json.put("longitude", message.getLongitude());
-                    System.out.println(json.toString());
-                } catch (JSONException e) {
-                    System.out.println("Error!");
+        if (!messages.isEmpty()) { // first check if there are messages to send 
+            if(conn != null && chnl != null) { // then ensure there is a connection before sending messages
+                for (Message message : messages) {
+                    JSONObject json = new JSONObject();
+                    try {
+                        json.put("serialNumber", message.getSerialNumber());
+                        json.put("time", message.getTime());
+                        json.put("latitude", message.getLatitude());
+                        json.put("longitude", message.getLongitude());
+                        String JSONMessage = json.toString();
+                        chnl.basicPublish("", rabbitmqQueue, null, JSONMessage.getBytes());
+                    } catch (IOException | JSONException e) {
+                        System.out.println("Error!");
+                    }
                 }
+                System.out.println("Messages sent successfully");
+            } else {
+                connectRabbitMQ(); // if this fails, method returns and is rerun by a driver class every ~5 seconds.
             }
-            System.out.println("Messages sent!");
         } else {
             System.out.println("No messages in list! please generate some messages.");
         }
@@ -71,22 +83,28 @@ public class GPSProducer {
 
     public void connectRabbitMQ() {
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost"); // $RABBITMQ_HOST
-        factory.setPort(5672);
-        Connection conn = null;
-        Channel chnl = null;
-        while (conn == null) {
+        factory.setHost(rabbitmqHost);
+        factory.setPort(Integer.parseInt(rabbitmqPort));
+        factory.setUsername(rabbitmqUser);
+        factory.setPassword(rabbitmqPass);
+        conn = null;
+        chnl = null;
+        while (conn == null || chnl == null) {
             try {
                 conn = factory.newConnection();
                 chnl = conn.createChannel();
-                Thread.sleep(3000);
-            } catch (Exception e) {
-                System.out.println("Unable to create connection to rabbitmq");
+            } catch (IOException | TimeoutException e) {
+                System.out.println("Unable to create connection to rabbitmq, trying again...");
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e1) {
+                    System.out.println("Thread interrupted");
+                }
             }
         }
         try {
             chnl.queueDeclare(
-                    queueName,
+                rabbitmqQueue,
                     false,
                     false,
                     false,
