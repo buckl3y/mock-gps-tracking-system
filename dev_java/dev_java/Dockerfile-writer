@@ -19,7 +19,7 @@ FROM eclipse-temurin:17-jre
 WORKDIR /app
 
 # Copy the built JAR from the builder stage
-COPY --from=builder /build/writer/target/writer*.jar ./writer.jar
+COPY --from=builder /build/writer/target/writer*-with-dependencies.jar ./writer.jar
 
 # Run the application
 CMD ["java", "-jar", "writer.jar"]

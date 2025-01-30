@@ -35,7 +35,7 @@
             <dependency>
                 <groupId>com.rabbitmq</groupId>
                 <artifactId>amqp-client</artifactId>
-                <version>3.5.6</version>
+                <version>5.16.0</version>
             </dependency>
             <dependency>
                 <groupId>com.buckl3y</groupId>
@@ -51,6 +51,11 @@
                 <groupId>org.json</groupId>
                 <artifactId>writer</artifactId>
                 <version>1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>42.7.5</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
