@@ -30,17 +30,20 @@ public class Consumer {
         this.listener = listener;
     }
     
+    //Consumes messages from defined queue. 
     public void consumeMessages() {
         RabbitMQManager rabbitMQManager = new RabbitMQManager(host, port, queue, user, pass);
         rabbitMQManager.connectRabbitMQ(); // conn and chnl must be assigned AFTER connectRabbitMQ(), else they will be null
         conn = rabbitMQManager.getConnection();
         chnl = rabbitMQManager.getChannel();
+
+        //Callback function to continously consume messages
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             synchronized (messages) {
                 String message = new String(delivery.getBody(), "UTF-8");
                 messages.add(message);
                 if(messages.size() >= BATCH_SIZE) {
-                    offloadBatch();
+                    offloadBatch(); 
                 }
             }
         };
@@ -52,6 +55,13 @@ public class Consumer {
     }
 
     public void offloadBatch() {
+        /*clears messages array and delivers batch via callback to GPSWriter Class.
+         * 
+         * The GPSWriter class implements the OffloadListener interface, which defines the batchOffload() method. 
+         * When the Consumer class calls batchOffload(List<String>), the overridden method in GPSWriter is triggered, 
+         * which in turn invokes the updateDB() method to write the batch of messages to the database.
+         * 
+        */
         List<String> batch;
         synchronized (messages) {
             batch = new ArrayList<>(messages);
