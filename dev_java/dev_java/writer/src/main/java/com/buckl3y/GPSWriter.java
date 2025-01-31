@@ -2,6 +2,7 @@ package com.buckl3y;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +25,7 @@ public class GPSWriter implements OffloadListener{
     }
 
     @Override
-    public void batchOffload(List<String> batch) {
+    public void batchOffload(List<Message> batch) {
         updateDB(new ArrayList<>(batch));
     }
 
@@ -32,9 +33,22 @@ public class GPSWriter implements OffloadListener{
         urlDB = "jdbc:postgresql://" + hostDB + ":" + portDB + "/" + nameDB;
     }
 
-    public void updateDB(ArrayList<String> batch) {
+    public void updateDB(ArrayList<Message> batch) {
         Connection conn = connectDB();
-        System.out.println(batch);
+        String sqlInsertAndUpdate = "INSERT INTO" + nameDB + "(serial_number, latitude, timestamp, longitude) VALUES(?,?,?,?)";
+        try {
+            PreparedStatement statement = conn.prepareStatement(sqlInsertAndUpdate);
+            for(Message message : batch) {
+                statement.setString(1, message.getSerialNumber());
+                statement.setString(2, message.getLatitude().toString());
+                statement.setString(3, message.getTime().toString());
+                statement.setString(4, message.getLongitude().toString());
+                statement.addBatch();
+            }
+            statement.executeBatch();
+        } catch (SQLException e) {
+            System.out.println("An SQL Exception has occured.");
+        }
         System.out.println("Writing batch to Database...");
         disconnectDB(conn);
     }

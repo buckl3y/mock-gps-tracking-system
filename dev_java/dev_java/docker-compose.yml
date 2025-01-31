@@ -57,6 +57,9 @@ services:
 
   # database
   postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile-postgres
     image: postgres:latest
     env_file:
       - .env
