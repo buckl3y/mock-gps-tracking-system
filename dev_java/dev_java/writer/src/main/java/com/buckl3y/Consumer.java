@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DeliverCallback;
@@ -49,7 +48,6 @@ public class Consumer {
                     String messageJSON = new String(delivery.getBody(), "UTF-8");
                     Message message = objectMapper.readValue(messageJSON, Message.class);
                     messages.add(message);
-                    System.out.println(messages);
                     if(messages.size() >= BATCH_SIZE) {
                         offloadBatch(); 
                     }

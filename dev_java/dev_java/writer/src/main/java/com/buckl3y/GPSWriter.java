@@ -14,14 +14,16 @@ public class GPSWriter implements OffloadListener{
     private final String nameDB;
     private final String userDB;
     private final String passDB;
+    private final String table;
     private String urlDB;
 
-    public GPSWriter(String host, int port, String name, String user, String pass) {
+    public GPSWriter(String host, int port, String name, String user, String pass, String table) {
         this.hostDB = host;
         this.portDB = port;
         this.nameDB = name;
         this.userDB = user;
         this.passDB = pass;
+        this.table = table;
     }
 
     @Override
@@ -35,21 +37,26 @@ public class GPSWriter implements OffloadListener{
 
     public void updateDB(ArrayList<Message> batch) {
         Connection conn = connectDB();
-        String sqlInsertAndUpdate = "INSERT INTO" + nameDB + "(serial_number, latitude, timestamp, longitude) VALUES(?,?,?,?)";
+        String sqlInsertAndUpdate = "INSERT INTO " + table + " (serial_number, latitude, timestamp, longitude) " +
+        "VALUES(?,?,?,?) " +
+        "ON CONFLICT (serial_number) " +
+        "DO UPDATE SET " +
+        "timestamp = EXCLUDED.timestamp, " + 
+        "latitude = EXCLUDED.latitude, " +
+        "longitude = EXCLUDED.longitude";
         try {
             PreparedStatement statement = conn.prepareStatement(sqlInsertAndUpdate);
             for(Message message : batch) {
                 statement.setString(1, message.getSerialNumber());
-                statement.setString(2, message.getLatitude().toString());
-                statement.setString(3, message.getTime().toString());
-                statement.setString(4, message.getLongitude().toString());
+                statement.setDouble(2, message.getLatitude());
+                statement.setObject(3, message.getTime().toOffsetDateTime());
+                statement.setDouble(4, message.getLongitude());
                 statement.addBatch();
             }
             statement.executeBatch();
         } catch (SQLException e) {
             System.out.println("An SQL Exception has occured.");
         }
-        System.out.println("Writing batch to Database...");
         disconnectDB(conn);
     }
     
@@ -59,9 +66,6 @@ public class GPSWriter implements OffloadListener{
         try {
             Class.forName("org.postgresql.Driver");
             conn = DriverManager.getConnection(urlDB, userDB, passDB);
-            if(conn != null) {
-                System.out.println("Connected to DB successfully. Hurray!");
-            }
         } catch (SQLException |ClassNotFoundException e) {
             System.out.println("A failure has occured when connecting to: " + hostDB);
         }

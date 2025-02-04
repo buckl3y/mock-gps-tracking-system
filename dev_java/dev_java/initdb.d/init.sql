@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS messages (
-    serial_number SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    serial_number VARCHAR(50) PRIMARY KEY,
+    timestamp TIMESTAMP WITH TIME ZONE,
     latitude  DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL
 );
